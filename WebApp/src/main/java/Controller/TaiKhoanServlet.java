@@ -6,10 +6,7 @@ import Model.Bean.TaiKhoan;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.*;
 import java.io.IOException;
 
 @WebServlet("/TaiKhoan")
@@ -19,26 +16,28 @@ public class TaiKhoanServlet extends HttpServlet {
         String mode = req.getParameter("mode");
         switch (mode) {
             case "DangNhap":
-                Cookie[] cookies = req.getCookies();
-                Cookie TaiKhoanCookie = null;
-                for (Cookie cookie : cookies) {
-                    if (cookie.getName().equals("TenDangNhap")) {
-                        TaiKhoanCookie = cookie;
-                        break;
-                    }
-                }
-                if (TaiKhoanCookie != null) {
-                    resp.sendRedirect(getServletContext().getContextPath().isBlank()?"/":getServletContext().getContextPath());
+                HttpSession session = req.getSession(false);
+                if (session != null) {
+                    resp.sendRedirect(getServletContext().getContextPath() + "/");
                     return;
                 }
                 req.setAttribute("mode", "DangNhap");
                 getServletContext().getRequestDispatcher("/WEB-INF/DangNhap.jsp").forward(req, resp);
                 break;
             case "DangXuat":
+                HttpSession currentsession = req.getSession(false);
+                if (currentsession != null) {
+                    currentsession.invalidate();
+                }
                 String returnURL = getServletContext().getContextPath() + "/TaiKhoan?mode=DangNhap";
                 resp.sendRedirect(returnURL);
                 break;
             case "DangKy":
+                HttpSession session2 = req.getSession(false);
+                if (session2 != null) {
+                    resp.sendRedirect(getServletContext().getContextPath() + "/");
+                    return;
+                }
                 req.setAttribute("mode", "DangKy");
                 getServletContext().getRequestDispatcher("/WEB-INF/DangNhap.jsp").forward(req, resp);
                 break;
@@ -59,12 +58,10 @@ public class TaiKhoanServlet extends HttpServlet {
             case "DangNhap":
                 try {
                     bo.DangNhap(taiKhoanDangNhap);
-                    Cookie taiKhoanCookie = new Cookie("TenDangNhap", taiKhoanDangNhap.getTenDangNhap());
-                    taiKhoanCookie.setMaxAge(60*30);
-                    resp.addCookie(taiKhoanCookie);
-                    resp.sendRedirect(getServletContext().getContextPath().isBlank()?"/":getServletContext().getContextPath());
-                }
-                catch (AuthenticationException e) {
+                    HttpSession session = req.getSession();
+                    session.setAttribute("TaiKhoan", taiKhoanDangNhap);
+                    resp.sendRedirect(getServletContext().getContextPath().isBlank() ? "/" : getServletContext().getContextPath());
+                } catch (AuthenticationException e) {
                     req.setAttribute("error", e.getMessage());
                     req.setAttribute("mode", "DangNhap");
                     getServletContext().getRequestDispatcher("/WEB-INF/DangNhap.jsp").forward(req, resp);
@@ -76,8 +73,7 @@ public class TaiKhoanServlet extends HttpServlet {
                 try {
                     bo.DangKyTaiKhoanMoi(taiKhoanDangNhap);
                     resp.sendRedirect(getServletContext().getContextPath() + "/TaiKhoan?mode=DangNhap");
-                }
-                catch (AuthenticationException e) {
+                } catch (AuthenticationException e) {
                     req.setAttribute("error", e.getMessage());
                     req.setAttribute("mode", "DangKy");
                     getServletContext().getRequestDispatcher("/WEB-INF/DangNhap.jsp").forward(req, resp);

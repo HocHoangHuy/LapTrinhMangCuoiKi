@@ -1,7 +1,5 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" session="false" %>
-<% String contextPath = request.getContextPath();
-    if (contextPath.isBlank()) contextPath = "/";
-    String mode = request.getParameter("mode");
+<% String mode = request.getParameter("mode");
 %>
 <!DOCTYPE html>
 <html>
